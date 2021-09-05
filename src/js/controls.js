@@ -1,9 +1,13 @@
 import * as THREE from 'three';
 
 
-export class Controls {
+const canvas = document.querySelector('.main-canvas');
+
+
+export class Controls extends THREE.EventDispatcher {
     STATE = { NONE: - 1, PAN: 0 };
     state = this.STATE.NONE;
+    eventTypes = {click: 'click', mouseMove: 'mouseMove'};
     scene;
     scroll = 1;
 
@@ -12,9 +16,10 @@ export class Controls {
     panDelta = new THREE.Vector2(0, 0);
 
     constructor(scene) {
+        super();
         this.scene = scene;
 
-        const canvas = document.querySelector('.main-canvas');
+        //const e = THREE.EventDispatcher({type: 'click', });
 
         canvas.addEventListener('wheel', event => this.onMouseWheel(event), false)
         canvas.addEventListener('mousedown', event => this.onMouseDown(event), false)
@@ -32,7 +37,13 @@ export class Controls {
     }
 
     onMouseMove(event) {
-        //this.panDelta.multiplyScalar(0);
+        const position = new THREE.Vector2(
+            event.clientX - canvas.clientWidth / 2,
+           -event.clientY + canvas.clientHeight / 2);
+
+        this.dispatchEvent( { 
+            type: this.eventTypes.click, 
+            position} );
 
         switch (this.state) {
             case this.STATE.PAN:
@@ -52,6 +63,14 @@ export class Controls {
     onMouseDown(event) {
         this.state = this.STATE.PAN;
         this.panStart.set( event.clientX, -event.clientY );
+
+        const position = new THREE.Vector2(
+            event.clientX - canvas.clientWidth / 2 - 200,
+           -event.clientY - canvas.clientHeight / 2);
+
+        this.dispatchEvent( { 
+            type: this.eventTypes.click, 
+            position} );
     }
 
     onMouseUp(event) {

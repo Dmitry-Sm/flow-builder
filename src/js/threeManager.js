@@ -14,10 +14,13 @@ export class ThreeManager {
         this.camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, 
                                                     height / - 2, 1, 1000 );
         this.scene.add( this.camera );
-        this.camera.position.set( 0, 0, 100 );
+        this.camera.position.set( 0, 0, 1000 );
         this.camera.lookAt( 0, 0, 0 );
         const canvas = document.querySelector('.main-canvas');
-        this.renderer = new THREE.WebGLRenderer({canvas});
+        this.renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true
+        });
         this.renderer.setSize( width, height );
     }
 
