@@ -5,15 +5,17 @@ const canvas = document.querySelector('.main-canvas');
 
 
 export class Controls extends THREE.EventDispatcher {
-    STATE = { NONE: - 1, PAN: 0 };
-    state = this.STATE.NONE;
-    eventTypes = {click: 'click', mouseMove: 'mouseMove'};
     scene;
+    // STATE = { NONE: - 1, PAN: 0 };
+    // state = this.STATE.NONE;
     scroll = 1;
+    pressed = false;
 
-    panStart = new THREE.Vector2(0, 0);
-    panEnd = new THREE.Vector2(0, 0);
-    panDelta = new THREE.Vector2(0, 0);
+    moveStart = new THREE.Vector2(0, 0);
+    moveEnd = new THREE.Vector2(0, 0);
+    deltaMove = new THREE.Vector2(0, 0);
+
+    static eventTypes = {mousedown: 'mousedown', mouseup: 'mouseup', mousemove: 'mousemove', wheel: 'wheel'};
 
     constructor(scene) {
         super();
@@ -25,15 +27,24 @@ export class Controls extends THREE.EventDispatcher {
         canvas.addEventListener('mousedown', event => this.onMouseDown(event), false)
         canvas.addEventListener('mouseup', event => this.onMouseUp(event), false)
         canvas.addEventListener('mousemove', event => this.onMouseMove(event), false)
+        canvas.addEventListener('mouseleave', event => this.onMouseLeave(event), false)
+    }
+
+    onMouseLeave() {
+        this.pressed = false;
+
     }
 
     onMouseWheel(event) {
 		event.preventDefault();
 		event.stopPropagation();
 
-        this.scroll -= event.deltaY * 0.001;
+        this.scroll -= event.deltaY * 0.0005;
         this.scroll = Math.min(Math.max(0.15, this.scroll), 2);
-        this.scene.scale.setScalar(this.scroll);
+
+        this.dispatchEvent( { 
+            type: Controls.eventTypes.wheel, 
+            scale: this.scroll} );
     }
 
     onMouseMove(event) {
@@ -41,43 +52,34 @@ export class Controls extends THREE.EventDispatcher {
             event.clientX - canvas.clientWidth / 2,
            -event.clientY + canvas.clientHeight / 2);
 
-        this.dispatchEvent( { 
-            type: this.eventTypes.click, 
-            position} );
-
-        switch (this.state) {
-            case this.STATE.PAN:
-                
-		        this.panEnd.set( event.clientX, -event.clientY );
-                this.panDelta.subVectors( this.panEnd, this.panStart );
-                this.pan(this.panDelta);
-                this.panStart.copy( this.panEnd );
-                
-                break;
+        this.moveEnd.set( event.clientX, -event.clientY );
+        this.deltaMove.subVectors( this.moveEnd, this.moveStart );
+        this.moveStart.copy( this.moveEnd );
         
-            default:
-                break;
-        }
+        this.dispatchEvent( { 
+            type: Controls.eventTypes.mousemove, 
+            delta: this.deltaMove,
+            pressed: this.pressed,
+            position} );
     }
 
     onMouseDown(event) {
-        this.state = this.STATE.PAN;
-        this.panStart.set( event.clientX, -event.clientY );
+        this.pressed = true;
+        this.moveStart.set( event.clientX, -event.clientY );
 
         const position = new THREE.Vector2(
-            event.clientX - canvas.clientWidth / 2 - 200,
-           -event.clientY - canvas.clientHeight / 2);
+            event.clientX - canvas.clientWidth / 2,
+           -event.clientY + canvas.clientHeight / 2);
 
         this.dispatchEvent( { 
-            type: this.eventTypes.click, 
+            type: Controls.eventTypes.mousedown, 
             position} );
     }
 
     onMouseUp(event) {
-        this.state = this.STATE.NONE;
-    }
+        this.pressed = false;
 
-    pan(vector) {
-        this.scene.position.add(new THREE.Vector3(vector.x, vector.y, 0));
+        this.dispatchEvent( { 
+            type: Controls.eventTypes.mouseup} );
     }
 }

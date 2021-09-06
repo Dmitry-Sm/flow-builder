@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import {rectGeometry} from './rectGeometry'
-
+import {Raycaster} from './raycaster'
 
 const color = {
     default: 0x280000,
-    hovered: 0x284000
+    hovered: 0x286000
 }
 
 
@@ -24,6 +24,7 @@ export class Port {
         this.mesh = new THREE.Mesh( this.geometry, this.material );
         this.mesh.position.set(this.position.x, this.position.y, 0);
         this.mesh.scale.set(this.size.width, this.size.height, 1);
+        Raycaster.addObject(this);
     }
 
     hover(isHovered) {        
