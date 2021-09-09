@@ -24,9 +24,9 @@ export class Controls extends THREE.EventDispatcher {
         //const e = THREE.EventDispatcher({type: 'click', });
 
         canvas.addEventListener('wheel', event => this.onMouseWheel(event), false)
-        canvas.addEventListener('mousedown', event => this.onMouseDown(event), false)
-        canvas.addEventListener('mouseup', event => this.onMouseUp(event), false)
-        canvas.addEventListener('mousemove', event => this.onMouseMove(event), false)
+        canvas.addEventListener('pointerdown', event => this.onMouseDown(event), false)
+        canvas.addEventListener('pointerup', event => this.onMouseUp(event), false)
+        canvas.addEventListener('pointermove', event => this.onMouseMove(event), false)
         canvas.addEventListener('mouseleave', event => this.onMouseLeave(event), false)
     }
 
@@ -40,7 +40,7 @@ export class Controls extends THREE.EventDispatcher {
 		event.stopPropagation();
 
         this.scroll -= event.deltaY * 0.0005;
-        this.scroll = Math.min(Math.max(0.15, this.scroll), 2);
+        this.scroll = Math.min(Math.max(0.15, this.scroll), 8);
 
         this.dispatchEvent( { 
             type: Controls.eventTypes.wheel, 
@@ -79,7 +79,12 @@ export class Controls extends THREE.EventDispatcher {
     onMouseUp(event) {
         this.pressed = false;
 
+        const position = new THREE.Vector2(
+            event.clientX - canvas.clientWidth / 2,
+           -event.clientY + canvas.clientHeight / 2);
+
         this.dispatchEvent( { 
-            type: Controls.eventTypes.mouseup} );
+            type: Controls.eventTypes.mouseup, 
+            position} );
     }
 }

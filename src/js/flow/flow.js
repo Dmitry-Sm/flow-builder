@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {Node} from './node'
 import {Raycaster} from './raycaster'
 import {Controls} from '../controls'
-
+import { ObjectType } from './enums';
 
 const Eps = 0.001;
 
@@ -14,9 +14,8 @@ export class Flow
     group;
     scaleGroup;
     raycaster;
-    lastHoverTarget;
-    lastRaycastTarget;
-    isGrabbing = false;
+    hoverTarget;
+    grabTarget;
 
     isPositioning = false;
     currentPosition = new THREE.Vector2(0, 0);
@@ -41,21 +40,52 @@ export class Flow
         controls.addEventListener(Controls.eventTypes.mousedown, e => {this.mouseDown(e)});
         controls.addEventListener(Controls.eventTypes.mouseup, e => {this.mouseUp(e)});
         
-        this.createNodes(200);
-        requestAnimationFrame( () => {this.update()} );
+        this.createTestNodes(6);
+        // const n1 = this.createNode(new THREE.Vector2(-200, 0));
+        // const n2 = this.createNode(new THREE.Vector2(200, 100));
+
+        // const p1 = n1.outputPortList.ports[0];
+        // const p2 = n1.outputPortList.ports[1];
+        // const p3 = n1.inputPortList.ports[2];
+
+        // const p4 = n2.inputPortList.ports[0];
+        // const p5 = n2.inputPortList.ports[1];
+        // const p6 = n2.outputPortList.ports[2];
+
+        // const line1 = p1.createLine();
+        // p1.connectLine(line1);
+        // p4.connectLine(line1);
+        // const line2 = p2.createLine();
+        // p2.connectLine(line2);
+        // p5.connectLine(line2);
+        // const line3 = p3.createLine();
+        // p3.connectLine(line3);
+        // p6.connectLine(line3);
+
+        // n1.updatePorts();
+        // n2.updatePorts();
+
+        // p1.updateLinePositions();
+
+        this.update();
     }
 
-    createNodes(num) {
+    createTestNodes(num) {
         const position = new THREE.Vector2();
 
         for (let i = 0; i < num; i++) {
-            position.set((Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 6000);
-            const node = new Node({position});
-            this.nodeList.push(node);
-            this.nodeMeshMap.set(node.mesh.id, node);
-            this.group.add(node.group);
-            
+            position.set((Math.random() - 0.5) * 2000, (Math.random() - 0.5) * 1000);
+            this.createNode(position);
         }
+    }
+
+    createNode(position) {
+        const node = new Node({position});
+        this.nodeList.push(node);
+        this.nodeMeshMap.set(node.mesh.id, node);
+        this.group.add(node.group);
+
+        return node;
     }
 
     wheel(event) {
@@ -67,20 +97,30 @@ export class Flow
         const intersect = this.raycaster.raycast(point.position);
         const target = intersect && Raycaster.objectMap.get(intersect.object.id);
 
-        if (target && target.isMovable) {
-            this.lastRaycastTarget = target;
-            this.isGrabbing = true;
+        if (target) {
+            target.mouseDown();
+
+            if (target.isDraggable) {
+                this.grabTarget = target;
+            }
         }
     }
 
-    mouseUp() {
-        this.isGrabbing = false;
+    mouseUp(point) {
+        if (this.grabTarget && this.grabTarget.type === ObjectType.Port) {
+            const intersect = this.raycaster.raycast(point.position);
+            const target = intersect && Raycaster.objectMap.get(intersect.object.id);
+
+            this.grabTarget.mouseUp(target);
+        }
+
+        this.grabTarget = null;
     }
 
     mouseMove(point) {        
         if (point.pressed) {
-            if (this.isGrabbing) {
-                this.lastRaycastTarget.move(point.delta.multiplyScalar(1 / this.currentScale));                
+            if (this.grabTarget) {
+                this.grabTarget.drag(point.delta.multiplyScalar(1 / this.currentScale));                
             }
             else {
                 this.targetPosition.add(point.delta.multiplyScalar(1 / this.currentScale));
@@ -97,17 +137,17 @@ export class Flow
         if (intersect) {
             const target = Raycaster.objectMap.get(intersect.object.id);
             
-            if (this.lastRaycastTarget && this.lastRaycastTarget != target) {
-                this.lastRaycastTarget.hover(false);
+            if (this.hoverTarget && this.hoverTarget != target) {
+                this.hoverTarget.hover(false);
             }
 
-            this.lastRaycastTarget = target;
-            this.lastRaycastTarget.hover(true);
+            this.hoverTarget = target;
+            this.hoverTarget.hover(true);
         }
         else {
-            if (this.lastRaycastTarget) {
-                this.lastRaycastTarget.hover(false);
-                this.lastRaycastTarget = null;
+            if (this.hoverTarget) {
+                this.hoverTarget.hover(false);
+                this.hoverTarget = null;
             }
         }
     }

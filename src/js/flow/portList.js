@@ -2,10 +2,6 @@ import * as THREE from 'three';
 import {Port} from './port'
 
 
-const portSize = {
-    width: 20,
-    height: 20
-}
 
 const portYOffset = 50;
 
@@ -13,13 +9,15 @@ const portYOffset = 50;
 export class PortList {
     position;
     group;
+    node;
+    ports = new Array();
 
-    static Type = {Input: -1, Output: 1}
-    type;
+    dataType;
 
-    constructor({position, size, type} = {}) {
+    constructor({position, size, dataType, node} = {}) {
         this.group = new THREE.Group();
-        this.type = type;
+        this.dataType = dataType;
+        this.node = node;
         this.position = position ? position : new THREE.Vector2(0, 0);
         this.group.position.set(this.position.x, this.position.y, 0.5)
 
@@ -27,15 +25,16 @@ export class PortList {
     }
 
     initPorts(num) {
-        const dir = this.type === PortList.Type.Input ? -1 : 1;
-        const position = new THREE.Vector2(portSize.width * dir, 0);
+        const dir = this.dataType === Port.DataType.Input ? -1 : 1;
+        const position = new THREE.Vector2(dir, 0);
 
         for (let i = 0; i < num; i++) {
-            const port = new Port({position, size: portSize});
-            position.y += portYOffset * dir;
-            this.group.add(port.mesh);                
+            const port = new Port({position, dataType: this.dataType, portList: this});
+            this.ports.push(port);
+
+            position.y -= portYOffset;
+            this.group.add(port.group);
         }
-        
     }
 }
 

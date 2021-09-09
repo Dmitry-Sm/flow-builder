@@ -21,6 +21,8 @@ export class ThreeManager {
             canvas,
             antialias: true
         });
+        
+        this.renderer.setPixelRatio( window.devicePixelRatio );
         this.renderer.setSize( width, height );
     }
 
