@@ -3,9 +3,20 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial'
 import { Line2 } from 'three/examples/jsm/lines/Line2'
 import { Port } from './port';
+import {Raycaster} from './raycaster'
+import {ObjectType} from './enums'
+
+
+const properties = {
+    color: {
+        default: 0xf0f050,
+        clicked: 0xf02050
+    }
+}
 
 
 export class Line {
+    type = ObjectType.Line;
     _startPoint;
     get startPoint() {
         if (!this.portStart) {
@@ -44,6 +55,7 @@ export class Line {
     }
 
     geometry;
+    material;
     mesh;
     group;
     portStart;
@@ -55,20 +67,26 @@ export class Line {
         this.geometry = new LineGeometry();
         this.geometry.setPositions([0, 0, 0, 0, 0, 0]);
     
-        const material = new LineMaterial({
-            color: 0xf0f050,
-            linewidth: 0.003, // in pixels
+        this.material = new LineMaterial({
+            color: properties.color.default,
+            linewidth: 0.005, // in pixels
             dashed: false,
         });
 
-        this.mesh = new Line2(this.geometry, material);
+        this.mesh = new Line2(this.geometry, this.material);
         this.group.add(this.mesh);
+        Raycaster.addObject(this, this.mesh);
         this.group.position.set(0, 0, 1);
     }
 
     drag(delta) {
         this.mousePoint.add(delta);
         this.update();
+    }
+
+    mouseDown(isClicked) {
+        this.material.color.set(isClicked ? properties.color.clicked :
+                properties.color.default);
     }
 
     canConnectTo(targetPort) {

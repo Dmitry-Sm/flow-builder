@@ -12,7 +12,7 @@ const flowGroup = new THREE.Group();
 threeManager.scene.add(flowGroup);
 
 const controls = new Controls(flowGroup);
-const flow = new Flow({controls, flowGroup});
+const flow = new Flow({controls, flowGroup, threeManager});
 
 const geometry = new THREE.PlaneGeometry(20000, 20000);
 const material = new THREE.ShaderMaterial( {

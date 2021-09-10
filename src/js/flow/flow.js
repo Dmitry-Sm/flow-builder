@@ -26,11 +26,11 @@ export class Flow
     currentScale = 1;
     targetScale = 1;
 
-    constructor({controls, flowGroup})
+    constructor({controls, flowGroup, threeManager})
     {
         this.nodeList = new Array();
         this.nodeMeshMap = new Map();
-        this.raycaster = new Raycaster();
+        this.raycaster = new Raycaster(threeManager.camera);
 
         this.scaleGroup = flowGroup;
         this.group = new THREE.Group();
@@ -99,19 +99,20 @@ export class Flow
         const target = intersect && Raycaster.objectMap.get(intersect.object.id);
 
         if (target) {
-            target.mouseDown();
-
             if (target.isDraggable) {
                 this.grabTarget = target;
             }
             
-            if (this.grabTarget && this.grabTarget.type === ObjectType.Node) {
+            if (target.type === ObjectType.Node || target.type === ObjectType.Line) {
                 if (this.clickTarget && this.clickTarget != target) {
                     this.clickTarget.mouseDown(false);
                 }
     
                 this.clickTarget = target;
                 this.clickTarget.mouseDown(true);
+            }
+            else {
+                target.mouseDown();
             }
                       
         }
@@ -153,6 +154,10 @@ export class Flow
     checkHover(intersect) {
         if (intersect) {
             const target = Raycaster.objectMap.get(intersect.object.id);
+
+            if (target.type === ObjectType.Line) {
+                return;
+            }
             
             if (this.hoverTarget && this.hoverTarget != target) {
                 this.hoverTarget.hover(false);

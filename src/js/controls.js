@@ -49,8 +49,8 @@ export class Controls extends THREE.EventDispatcher {
 
     onMouseMove(event) {
         const position = new THREE.Vector2(
-            event.clientX - canvas.clientWidth / 2,
-           -event.clientY + canvas.clientHeight / 2);
+            (event.clientX / canvas.clientWidth - 0.5) * 2,
+            (-event.clientY / canvas.clientHeight + 0.5) * 2);
 
         this.moveEnd.set( event.clientX, -event.clientY );
         this.deltaMove.subVectors( this.moveEnd, this.moveStart );
@@ -68,20 +68,21 @@ export class Controls extends THREE.EventDispatcher {
         this.moveStart.set( event.clientX, -event.clientY );
 
         const position = new THREE.Vector2(
-            event.clientX - canvas.clientWidth / 2,
-           -event.clientY + canvas.clientHeight / 2);
+            (event.clientX / canvas.clientWidth - 0.5) * 2,
+            (-event.clientY / canvas.clientHeight + 0.5) * 2);
 
         this.dispatchEvent( { 
             type: Controls.eventTypes.mousedown, 
-            position} );
+            position
+        } );
     }
 
     onMouseUp(event) {
         this.pressed = false;
 
         const position = new THREE.Vector2(
-            event.clientX - canvas.clientWidth / 2,
-           -event.clientY + canvas.clientHeight / 2);
+            (event.clientX / canvas.clientWidth - 0.5) * 2,
+            (-event.clientY / canvas.clientHeight + 0.5) * 2);
 
         this.dispatchEvent( { 
             type: Controls.eventTypes.mouseup, 

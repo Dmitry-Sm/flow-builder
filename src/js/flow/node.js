@@ -98,7 +98,7 @@ export class Node {
         this.zpos = Math.floor(Math.random() * 500);
         this.group.position.set(position.x, position.y, this.zpos);
         this.group.add(this.mesh);
-        Raycaster.addObject(this);
+        Raycaster.addObject(this, this.mesh);
 
         this.initPorts();
         this.addHeader();

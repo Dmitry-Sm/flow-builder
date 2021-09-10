@@ -9,13 +9,17 @@ import portIcon from '../../images/port.png'
 const properties = {
     icon: {
         texture: new THREE.TextureLoader().load(portIcon),
+        size: {
+            width: 16,
+            height: 16
+        },
     },
     color: {
         default: 0x280000,
         hovered: 0x286000
     },
     size: {
-        width: 16,
+        width: 60,
         height: 16
     },
     label: {
@@ -50,7 +54,7 @@ export class Port {
         if (!this._linePointOffset) {
             const direction = this.dataType === Port.DataType.Input ? -1 : 1;
 
-            this._linePointOffset = new THREE.Vector3(2 * this.size.width * direction, 0, 0);
+            this._linePointOffset = new THREE.Vector3(2 * properties.icon.size.width * direction, 0, 0);
         }
 
         this.group.updateMatrixWorld();
@@ -82,14 +86,14 @@ export class Port {
             map: properties.icon.texture
         } );
 
-        this.mesh = new THREE.Mesh( this.geometry, this.material );
+        this.iconMesh = new THREE.Mesh( this.geometry, this.material );
         const dir = this.dataType === Port.DataType.Input ? -1 : 1;
-        const x = this.position.x + dir * this.size.width;
-        this.mesh.position.set( x, 0, 0 );
-        const width = -this.size.width * dir;
-        this.mesh.scale.set( width, this.size.height, 0.01 );
-        this.group.add( this.mesh );
-        Raycaster.addObject( this );
+        const x = this.position.x + dir * properties.icon.size.width;
+        this.iconMesh.position.set( x, 0, 0 );
+        const width = -properties.icon.size.width * dir;
+        this.iconMesh.scale.set( width, properties.icon.size.height, 0.01 );
+        this.group.add( this.iconMesh );
+        Raycaster.addObject( this, this.iconMesh);
     }
 
     initLabel() {

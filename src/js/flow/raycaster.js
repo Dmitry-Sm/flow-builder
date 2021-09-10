@@ -9,15 +9,17 @@ export class Raycaster {
     static meshMap;
     static objectMap;
     lastTarget;
+    camera;
 
-    constructor() {
+    constructor(camera) {
+        this.camera = camera;
         Raycaster.meshMap = new Map();
         Raycaster.objectMap = new Map();
     }
 
-    static addObject(object) {
-        Raycaster.meshMap.set(object.mesh.id, object.mesh);
-        Raycaster.objectMap.set(object.mesh.id, object)
+    static addObject(object, mesh) {
+        Raycaster.meshMap.set(mesh.id, mesh);
+        Raycaster.objectMap.set(mesh.id, object)
     }
 
     static addObjects(objects) {
@@ -38,11 +40,10 @@ export class Raycaster {
     }
     
     raycast(position) {
-        const origin = new THREE.Vector3(position.x, position.y, 1000);
-        raycaster.set(origin, raycastDirection);
+        raycaster.setFromCamera(position, this.camera);
 
         const a = Array.from(Raycaster.meshMap.values());
-        const intersect = raycaster.intersectObjects( a )[0];
+        const intersect = raycaster.intersectObjects( a )[0];        
 
         return intersect;
     }
