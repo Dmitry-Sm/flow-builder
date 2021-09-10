@@ -59,7 +59,7 @@ export class Port {
         return this._lineWorldPoint;
     }
 
-    static DataType = {Input: -1, Output: 1}
+    static DataType = {Input: 'Input', Output: 'Output'}
     dataType;
 
     constructor({position, dataType, portList} = {}) {
@@ -83,10 +83,11 @@ export class Port {
         } );
 
         this.mesh = new THREE.Mesh( this.geometry, this.material );
-        let x = this.dataType === Port.DataType.Input ? -1 : 1;
-        x = this.position.x + x * this.size.width;
+        const dir = this.dataType === Port.DataType.Input ? -1 : 1;
+        const x = this.position.x + dir * this.size.width;
         this.mesh.position.set( x, 0, 0 );
-        this.mesh.scale.set( this.size.width, this.size.height, 0.01 );
+        const width = -this.size.width * dir;
+        this.mesh.scale.set( width, this.size.height, 0.01 );
         this.group.add( this.mesh );
         Raycaster.addObject( this );
     }
@@ -121,42 +122,50 @@ export class Port {
         return line;
     }
 
-    connectLine(line) {
-        this.lines.push(line);
-        line.connect(this);
+    addLine(line) {
+        if (!this.lines.includes(line)) {
+            this.lines.push(line);
+        }
+        
+        this.update();
+    }
+
+    disconnectLine(line) {
+        if (this.lines.includes(line)) {
+            const index = this.lines.indexOf(line);
+            this.lines.splice(index, 1);
+        }
+
+        this.update();
     }
 
     removeLine(line) {
         if (line === this.unattachedLine) {
-            line.remove();
             this.unattachedLine = null;
         }
-        else if (this.lines.includes(line)) {
-            const index = this.lines.indexOf(line);
-            this.lines.splice(index);
-        }
+
+        this.disconnectLine(line);
+        line.remove();
+
+        this.update();
     }
+
+    // #region Events
 
     mouseDown() {
-        this.unattachedLine = this.createLine(this);
-        this.unattachedLine.connect(this);
-    }
+        const lineNumCheck = this.dataType != Port.DataType.Input || 
+                             this.lines.length === 0;
 
-    drag(delta) {
-        this.unattachedLine.drag(delta);
-    }
-
-    mouseUp(secondPort) {
-        if (secondPort && this.dataType != secondPort.dataType && this.unattachedLine) {
-            this.lines.push(this.unattachedLine);
-            this.unattachedLine.connect(secondPort, this.dataType);
-            secondPort.connectLine(this.unattachedLine);
+        if (lineNumCheck) {
+            this.unattachedLine = this.createLine(this);
+            this.unattachedLine.connect(this);
         }
         else {
-            this.unattachedLine.remove();
+            this.unattachedLine = this.lines.pop();
+            this.unattachedLine.disconnect(this);
         }
 
-        this.unattachedLine = null;
+        this.update();
     }
 
     hover(isHovered) {        
@@ -164,9 +173,46 @@ export class Port {
         // this.mesh.material.color.set( newColor );
     }
 
+    drag(delta) {
+        if (this.unattachedLine) {
+            this.unattachedLine.drag(delta);
+        }
+    }
+
+    mouseUp(secondPort) {
+        if (!this.unattachedLine) {
+            return; // connection was canceled
+        }
+
+        if (secondPort && this.unattachedLine.canConnectTo(secondPort)) {
+            this.unattachedLine.connect(secondPort);
+            this.unattachedLine.portStart.addLine(this.unattachedLine);
+            this.unattachedLine.portEnd.addLine(this.unattachedLine);
+        }
+        else {
+            this.unattachedLine.remove();
+        }
+
+        this.unattachedLine = null;
+
+        this.update();
+        if (secondPort) {
+            secondPort.update();
+        }
+    }
+
+    // #endregion
+    // #region Updates
+
+    update() {
+        this.text.set({content: 'Port num: ' + this.lines.length});
+    }
+
     updateLinePositions() {
         this.lines.forEach(line => {
             line.update();
         });
     }
+
+    // #endregion
 }

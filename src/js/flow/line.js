@@ -32,25 +32,33 @@ export class Line {
         return this._endPoint.copy(this.group.worldToLocal(this.portEnd.lineWorldPoint));
     }
 
+    get connectedPort() {
+        if (this.portStart) {
+            return this.portStart;
+        }
+        else if (this.portEnd) {
+            return this.portEnd;
+        }
+
+        return null;
+    }
+
     geometry;
     mesh;
     group;
     portStart;
     portEnd;
-    portParrent;
     mousePoint = new THREE.Vector2(0, 0);
     
     constructor(port) {
         this.group = new THREE.Group();
         this.geometry = new LineGeometry();
         this.geometry.setPositions([0, 0, 0, 0, 0, 0]);
-        this.portParrent = port;
     
         const material = new LineMaterial({
             color: 0xf0f050,
             linewidth: 0.003, // in pixels
             dashed: false,
-            //alphaToCoverage: true,
         });
 
         this.mesh = new Line2(this.geometry, material);
@@ -61,6 +69,38 @@ export class Line {
     drag(delta) {
         this.mousePoint.add(delta);
         this.update();
+    }
+
+    canConnectTo(targetPort) {
+        if (!this.connectedPort) {
+            return false;
+        }
+
+        const differentTypes = this.connectedPort.dataType != targetPort.dataType;
+        const lineNumCheck = this.connectedPort.dataType === Port.DataType.Input &&
+                             this.connectedPort.lines.length === 0 ||
+                             targetPort.lines.length === 0;
+        let alreadyConnected = false;
+        
+        this.connectedPort.lines.forEach(line => {
+            if (targetPort.lines.includes(line)) {
+                alreadyConnected = true;
+            }
+        });
+
+        if (!differentTypes) {
+            console.log('Port connection failed: similar port type "' + targetPort.dataType + '"');
+        }
+
+        if (!lineNumCheck) {
+            console.log('Port connection failed: only one incoming connection allowed');
+        }
+
+        if (alreadyConnected) {
+            console.log('Port connection failed: this ports already connected');
+        }
+
+        return differentTypes && lineNumCheck && !alreadyConnected;
     }
 
     connect(port) {
@@ -74,7 +114,29 @@ export class Line {
         this.update();
     }
 
+    disconnect(port) {
+        if (port === this.portStart) {
+            this.mousePoint.set(this.startPoint.x, this.startPoint.y);
+            this.portStart = null;
+        }
+        
+        if (port === this.portEnd) {
+            this.mousePoint.set(this.endPoint.x, this.endPoint.y);
+            this.portEnd = null;
+        }
+    }
+
     remove() {
+        if (this.portStart) {
+            this.portStart.disconnectLine(this);
+            this.portStart = null;
+        }
+        
+        if (this.portEnd) {
+            this.portEnd.disconnectLine(this);
+            this.portStart = null;
+        }
+
         this.geometry.dispose();
         this.group.remove(this.mesh);
     }
