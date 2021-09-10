@@ -15,6 +15,7 @@ export class Flow
     scaleGroup;
     raycaster;
     hoverTarget;
+    clickTarget;
     grabTarget;
 
     isPositioning = false;
@@ -103,6 +104,22 @@ export class Flow
             if (target.isDraggable) {
                 this.grabTarget = target;
             }
+            
+            if (this.grabTarget && this.grabTarget.type === ObjectType.Node) {
+                if (this.clickTarget && this.clickTarget != target) {
+                    this.clickTarget.mouseDown(false);
+                }
+    
+                this.clickTarget = target;
+                this.clickTarget.mouseDown(true);
+            }
+                      
+        }
+        else {
+            if (this.clickTarget) {
+                this.clickTarget.mouseDown(false);
+                this.clickTarget = null;
+            }
         }
     }
 
@@ -155,8 +172,15 @@ export class Flow
     update() {
         this.updatePosition();
         this.updateScale();
+        this.updateNodes();
 
         requestAnimationFrame( () => {this.update()} );
+    }
+
+    updateNodes() {
+        this.nodeList.forEach(node => {
+            node.update();
+        });
     }
 
     updatePosition() {

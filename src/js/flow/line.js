@@ -16,12 +16,7 @@ export class Line {
             this._startPoint = new THREE.Vector2(0, 0);
         }
 
-        const worldPoint = this.portStart.lineWorldPoint;
-        const localPoint = this.group.worldToLocal(worldPoint);
-        
-        this._startPoint.copy(localPoint);
-
-        return this._startPoint;
+        return this._startPoint.copy(this.group.worldToLocal(this.portStart.lineWorldPoint));
     }
 
     _endPoint;
@@ -42,12 +37,14 @@ export class Line {
     group;
     portStart;
     portEnd;
+    portParrent;
     mousePoint = new THREE.Vector2(0, 0);
     
-    constructor() {
+    constructor(port) {
         this.group = new THREE.Group();
         this.geometry = new LineGeometry();
         this.geometry.setPositions([0, 0, 0, 0, 0, 0]);
+        this.portParrent = port;
     
         const material = new LineMaterial({
             color: 0xf0f050,

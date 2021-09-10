@@ -4,26 +4,31 @@ import {Raycaster} from './raycaster'
 import {Font} from './font'
 import {Line} from './line'
 import {ObjectType} from './enums'
+import portIcon from '../../images/port.png'
 
-const color = {
-    default: 0x280000,
-    hovered: 0x286000
-}
-
-const size = {
-    width: 16,
-    height: 16
-}
-
-const labelProperty = {
-    width: 180,
-    height: 0.000001,
-    padding: 5,
-    font: {
-        size: 22,
-        color: new THREE.Color( 0xcccccc )
+const properties = {
+    icon: {
+        texture: new THREE.TextureLoader().load(portIcon),
+    },
+    color: {
+        default: 0x280000,
+        hovered: 0x286000
+    },
+    size: {
+        width: 16,
+        height: 16
+    },
+    label: {
+        width: 180,
+        height: 0.000001,
+        padding: 15,
+        font: {
+            size: 22,
+            color: new THREE.Color( 0xeeeeee )
+        }
     }
 }
+
 
 export class Port {
     type = ObjectType.Port;
@@ -47,7 +52,7 @@ export class Port {
 
             this._linePointOffset = new THREE.Vector3(2 * this.size.width * direction, 0, 0);
         }
-        
+
         this.group.updateMatrixWorld();
         this.group.getWorldPosition(this._lineWorldPoint).add(this._linePointOffset);
 
@@ -64,17 +69,18 @@ export class Port {
 
         this.group = new THREE.Group();
         this.group.position.set(this.position.x, this.position.y, 0.5);
-        this.size = size;
+        this.size = properties.size;
 
         this.initIcon();
         this.initLabel();
-
-        this.update();
     }
 
     initIcon() {
         this.geometry = rectGeometry;
-        this.material = new THREE.MeshBasicMaterial( {color: color.default} );
+        this.material = new THREE.MeshBasicMaterial( {
+            // color: properties.color.default,
+            map: properties.icon.texture
+        } );
 
         this.mesh = new THREE.Mesh( this.geometry, this.material );
         let x = this.dataType === Port.DataType.Input ? -1 : 1;
@@ -88,24 +94,23 @@ export class Port {
     initLabel() {
         const leftSide = this.dataType === Port.DataType.Input;
         const container = new ThreeMeshUI.Block({
-            width: labelProperty.width,
-            height: labelProperty.height,
-            padding: labelProperty.padding,
+            width: properties.label.width,
+            height: properties.label.height,
+            padding: properties.label.padding,
             justifyContent: 'center',
             alignContent: leftSide ? 'left' : 'right',
         });
     
-        let x = labelProperty.width / 2 * (leftSide ? 1 : -1);
+        let x = properties.label.width / 2 * (leftSide ? 1 : -1);
         container.position.set( x, 0, 2 );
         this.group.add( container );
     
         this.text = new ThreeMeshUI.Text({
             content: "Port label",
-            fontColor: labelProperty.font.color,
-            fontSize: labelProperty.font.size,
+            fontColor: properties.label.font.color,
+            fontSize: properties.label.font.size,
             fontFamily: Font.Data,
-            fontTexture: Font.Image,
-            backgroundOpacity: 0
+            fontTexture: Font.Image
         });
         container.add(this.text);
     }
@@ -133,7 +138,7 @@ export class Port {
     }
 
     mouseDown() {
-        this.unattachedLine = this.createLine();
+        this.unattachedLine = this.createLine(this);
         this.unattachedLine.connect(this);
     }
 
@@ -155,23 +160,13 @@ export class Port {
     }
 
     hover(isHovered) {        
-        const newColor = isHovered ? color.hovered : color.default;
-        this.mesh.material.color.set( newColor );
+        const newColor = isHovered ? properties.color.hovered : properties.color.default;
+        // this.mesh.material.color.set( newColor );
     }
 
     updateLinePositions() {
         this.lines.forEach(line => {
             line.update();
         });
-    }
-
-    
-    update() {
-        let s = 'Lines num: ' + this.lines.length;
-
-        this.text.set({
-            content: s})
-        
-        requestAnimationFrame( () => {this.update()} );
     }
 }
