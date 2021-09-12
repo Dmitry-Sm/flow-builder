@@ -52,7 +52,9 @@ export class Node {
     group;
     inputPortList;
     outputPortList;
+    textContainer;
     text;
+    size;
     isDraggable = true;
     uniforms;
     name;
@@ -63,11 +65,23 @@ export class Node {
     targetPosition = new THREE.Vector2(0, 0);
     zpos;
 
+    get left() {
+        return -this.size.width / 2;
+    }
+
+    get right() {
+        return this.size.width / 2;
+    }
+
+    get top() {
+        return this.size.height / 2;
+    }
+
     constructor({position, name} = {}) {
         this.currentPosition.copy(position);
         this.targetPosition.copy(position);
         this.geometry = rectGeometry;
-        this.size = properties.size;
+        this.size = Object.assign({}, properties.size);
         this.name = name;
 
         this.uniforms = {
@@ -104,10 +118,12 @@ export class Node {
 
         this.initPorts();
         this.addHeader();
+
+        this.updateSize();
     }
 
     addHeader() {
-        const container = new ThreeMeshUI.Block({
+        this.textContainer = new ThreeMeshUI.Block({
             width: this.size.width,
             height: 0.00001, // the number is set small to avoid overlapping the text with the container, but not zero to pass the check
             padding: properties.header.padding,
@@ -116,22 +132,22 @@ export class Node {
             backgroundOpacity: 0.2
         });
     
-        container.position.set( 0, (this.size.height + properties.header.height) / 2, 0 );
-        this.group.add( container );
+        this.textContainer.position.set( 0, (this.size.height + properties.header.height) / 2, 0 );
+        this.group.add( this.textContainer );
     
         this.text = new ThreeMeshUI.Text({
-            content: "Node header",
+            content: 'Node ' + this.name,
             fontColor: properties.header.font.color,
             fontSize: properties.header.font.size,
             fontFamily: Font.Data,
             fontTexture: Font.Image,
         });
         
-        container.add(this.text);    
+        this.textContainer.add(this.text);    
     }
 
     initPorts() {
-        const leftTop = new THREE.Vector2(-this.size.width / 2 + 1, this.size.height / 2 - properties.ports.topPadding);
+        const leftTop = new THREE.Vector2(this.left, this.top - properties.ports.topPadding);
         this.inputPortList = new PortList({
             dataType: Port.DataType.Input,
             position: leftTop,
@@ -139,7 +155,7 @@ export class Node {
         });
         this.group.add(this.inputPortList.group);
         
-        const rightCenter = new THREE.Vector2(this.size.width / 2 - 1, -properties.ports.bottomPadding);
+        const rightCenter = new THREE.Vector2(this.right, -properties.ports.bottomPadding);
         this.outputPortList = new PortList({
             dataType: Port.DataType.Output,
             position: rightCenter,
@@ -200,6 +216,23 @@ export class Node {
                 this.isPositioning = false;
             }
         }
+    }
+
+    updateSize() {
+        const h = this.inputPortList.size.height + 
+            this.outputPortList.size.height + 
+            properties.ports.topPadding + 
+            properties.ports.bottomPadding;
+        this.size.height = h;
+        this.mesh.scale.set(this.size.width / 2, this.size.height / 2, 1);
+        this.uniforms.u_size.value.set(this.size.width, this.size.height);
+
+        this.textContainer.position.y = this.top + properties.header.height / 2;
+
+        this.inputPortList.group.position.y = this.top - properties.ports.topPadding;
+        this.outputPortList.group.position.y = this.top - this.inputPortList.size.height -
+            properties.ports.topPadding - 
+            properties.ports.bottomPadding;
     }
     // #endregion
 }

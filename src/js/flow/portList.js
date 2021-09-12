@@ -10,19 +10,25 @@ export class PortList {
     position;
     group;
     node;
+    size;
     ports = new Array();
     portCounter = 1;
 
     dataType;
 
-    constructor({position, size, dataType, node} = {}) {
+    constructor({position, dataType, node} = {}) {
         this.group = new THREE.Group();
         this.dataType = dataType;
         this.node = node;
         this.position = position ? position : new THREE.Vector2(0, 0);
         this.group.position.set(this.position.x, this.position.y, 0.5)
 
-        this.initPorts(3);
+        this.initPorts(Math.floor(Math.random() * 4) + 1);
+
+        this.size = {
+            width: node.size.width,
+            height: this.ports.length * portYOffset
+        }
     }
 
     initPorts(num) {
