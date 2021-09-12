@@ -5,7 +5,7 @@ import {Controls} from '../controls'
 import { ObjectType } from './enums';
 
 const Eps = 0.001;
-
+const Abc = 'abcdefghijklmnopqrstuvwxyz';
 
 export class Flow
 {
@@ -17,6 +17,7 @@ export class Flow
     hoverTarget;
     clickTarget;
     grabTarget;
+    nodeCounter = 0;
 
     isPositioning = false;
     currentPosition = new THREE.Vector2(0, 0);
@@ -42,32 +43,6 @@ export class Flow
         controls.addEventListener(Controls.eventTypes.mouseup, e => {this.mouseUp(e)});
         
         this.createTestNodes(6);
-        // const n1 = this.createNode(new THREE.Vector2(-200, 0));
-        // const n2 = this.createNode(new THREE.Vector2(200, 100));
-
-        // const p1 = n1.outputPortList.ports[0];
-        // const p2 = n1.outputPortList.ports[1];
-        // const p3 = n1.inputPortList.ports[2];
-
-        // const p4 = n2.inputPortList.ports[0];
-        // const p5 = n2.inputPortList.ports[1];
-        // const p6 = n2.outputPortList.ports[2];
-
-        // const line1 = p1.createLine();
-        // p1.connectLine(line1);
-        // p4.connectLine(line1);
-        // const line2 = p2.createLine();
-        // p2.connectLine(line2);
-        // p5.connectLine(line2);
-        // const line3 = p3.createLine();
-        // p3.connectLine(line3);
-        // p6.connectLine(line3);
-
-        // n1.updatePorts();
-        // n2.updatePorts();
-
-        // p1.updateLinePositions();
-
         this.update();
     }
 
@@ -81,12 +56,25 @@ export class Flow
     }
 
     createNode(position) {
-        const node = new Node({position});
+        const node = new Node({position, name: this.getNodeName(this.nodeCounter++)});
         this.nodeList.push(node);
         this.nodeMeshMap.set(node.mesh.id, node);
         this.group.add(node.group);
 
         return node;
+    }
+
+    getNodeName(num) {
+        let s = '';
+        const length = Abc.length;
+
+        while (num > 0 || s === '') {
+            const pos = num % length;
+            num = Math.floor(num / length);
+            s = Abc.charAt(pos) + s;
+        }
+
+        return s;
     }
 
     wheel(event) {
@@ -95,10 +83,15 @@ export class Flow
     }
 
     mouseDown(point) {
-        const intersect = this.raycaster.raycast(point.position);
-        const target = intersect && Raycaster.objectMap.get(intersect.object.id);
+        const intersects = this.raycaster.raycast(point.position);
+        const intersect = intersects[0];
+        let target = intersect && Raycaster.objectMap.get(intersect.object.id);
 
         if (target) {
+            if (target.type === ObjectType.Label && intersects.length > 1) {
+                target = Raycaster.objectMap.get(intersects[1].object.id);            
+            }
+
             if (target.isDraggable) {
                 this.grabTarget = target;
             }
@@ -119,7 +112,6 @@ export class Flow
 
                 target.mouseDown();                
             }
-                      
         }
         else {
             if (this.clickTarget) {
@@ -131,7 +123,7 @@ export class Flow
 
     mouseUp(point) {
         if (this.grabTarget && this.grabTarget.type === ObjectType.Port) {
-            const intersect = this.raycaster.raycast(point.position);
+            const intersect = this.raycaster.raycast(point.position)[0];
             const target = intersect && Raycaster.objectMap.get(intersect.object.id);
 
             this.grabTarget.mouseUp(target);
@@ -151,7 +143,7 @@ export class Flow
             }
         }
         else {
-            const intersect = this.raycaster.raycast(point.position);
+            const intersect = this.raycaster.raycast(point.position)[0];
             this.checkHover(intersect);
         }
     }
@@ -210,7 +202,7 @@ export class Flow
     updateScale() {
         if (this.isScaling) {
             this.currentScale -= (this.currentScale - this.targetScale) * 0.1;
-            this.scaleGroup.scale.setScalar(this.currentScale);
+            this.scaleGroup.scale.set(this.currentScale, this.currentScale, 1);
 
             if (Math.abs(this.currentScale - this.targetScale) < Eps) {
                 this.isScaling = false;

@@ -42,9 +42,9 @@ export class Raycaster {
     raycast(position) {
         raycaster.setFromCamera(position, this.camera);
 
-        const a = Array.from(Raycaster.meshMap.values());
-        const intersect = raycaster.intersectObjects( a )[0];        
+        const raycastingObjects = Array.from(Raycaster.meshMap.values());
+        const intersects = raycaster.intersectObjects( raycastingObjects, false );        
 
-        return intersect;
+        return intersects;
     }
 }

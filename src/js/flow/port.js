@@ -5,31 +5,37 @@ import {Font} from './font'
 import {Line} from './line'
 import {ObjectType} from './enums'
 import portIcon from '../../images/port.png'
+import { PortLabel } from './portLabel';
 
 const properties = {
     icon: {
         texture: new THREE.TextureLoader().load(portIcon),
         size: {
-            width: 16,
-            height: 16
+            width: 13,
+            height: 13
         },
         color: {
-            default: 0xffffff,
             hovered: 0xaaaaaa,
-            clicked: 0x888888,
+            clicked: 0xf02050,
         },
     },
-    size: {
-        width: 60,
-        height: 16
+    name: {
+        size: {
+            width: 24,
+            height: 24
+        },
+        text: {
+            padding: 7,
+            size: 17,
+            color: {
+                default: new THREE.Color( 0xffffff )
+            }
+        }
     },
     label: {
-        width: 180,
-        height: 0.000001,
-        padding: 15,
-        font: {
-            size: 22,
-            color: new THREE.Color( 0xeeeeee )
+        size: {
+            width: 60,
+            height: 20
         }
     }
 }
@@ -44,9 +50,12 @@ export class Port {
     size;
     group;
     portList;
-    text;
+    label;
+    color;
+    name;
     isClicked;
     lines = new Array();
+    labelCollider;
     unattachedLine;
     isDraggable = true;
 
@@ -68,23 +77,30 @@ export class Port {
     static DataType = {Input: 'Input', Output: 'Output'}
     dataType;
 
-    constructor({position, dataType, portList} = {}) {
+    constructor({position, dataType, portList, name, color} = {}) {
         this.dataType = dataType;
         this.portList = portList;
+        this.name = name;
+        this.color = color;
         this.position = position ? position : new THREE.Vector2(0, 0);
 
         this.group = new THREE.Group();
         this.group.position.set(this.position.x, this.position.y, 0.5);
         this.size = properties.size;
 
+        this.label = new PortLabel({port: this, size: properties.label.size, text: 'port text'});
+        this.group.add(this.label.group);
+
         this.initIcon();
-        this.initLabel();
+        this.initPortName(name);
     }
 
     initIcon() {
         this.geometry = rectGeometry;
         this.material = new THREE.MeshBasicMaterial( {
-            map: properties.icon.texture
+            map: properties.icon.texture,
+            transparent: true,
+            color: this.color
         } );
 
         this.iconMesh = new THREE.Mesh( this.geometry, this.material );
@@ -97,28 +113,29 @@ export class Port {
         Raycaster.addObject( this, this.iconMesh);
     }
 
-    initLabel() {
+    initPortName(name) {        
         const leftSide = this.dataType === Port.DataType.Input;
         const container = new ThreeMeshUI.Block({
-            width: properties.label.width,
-            height: properties.label.height,
-            padding: properties.label.padding,
+            width: properties.name.size.width,
+            height: properties.name.size.height,
             justifyContent: 'center',
-            alignContent: leftSide ? 'left' : 'right',
+            lineBreak: null,
+            backgroundColor: this.color,
+            alignContent: 'center',
+            borderRadius: 4
         });
-    
-        let x = properties.label.width / 2 * (leftSide ? 1 : -1);
+        const x = (properties.name.size.width / 2 + properties.name.text.padding) * (leftSide ? 1 : -1);
         container.position.set( x, 0, 2 );
         this.group.add( container );
-    
-        this.text = new ThreeMeshUI.Text({
-            content: "Port label",
-            fontColor: properties.label.font.color,
-            fontSize: properties.label.font.size,
+        
+        this.textMesh = new ThreeMeshUI.Text({
+            content: name,
+            fontColor: properties.name.text.color.default,
+            fontSize: properties.name.text.size,
             fontFamily: Font.Data,
             fontTexture: Font.Image
         });
-        container.add(this.text);
+        container.add(this.textMesh);
     }
 
     createLine() {
@@ -184,7 +201,7 @@ export class Port {
 
             this.material.color.set( isClicked ? 
                 properties.icon.color.clicked :
-                properties.icon.color.default );
+                this.color );
         }
     }
 
@@ -220,7 +237,6 @@ export class Port {
     // #region Updates
 
     update() {
-        this.text.set({content: 'Port num: ' + this.lines.length});
     }
 
     updateLinePositions() {

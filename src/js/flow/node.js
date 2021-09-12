@@ -32,8 +32,8 @@ const properties = {
         bottomPadding: 10
     },
     header: {
-        height: 30,
-        padding: 5,
+        height: 34,
+        padding: 8,
         font: {
             size: 26,
             color: new THREE.Color( 0xffffff )
@@ -55,6 +55,7 @@ export class Node {
     text;
     isDraggable = true;
     uniforms;
+    name;
 
     isClicked = false;
     isPositioning = false;
@@ -62,11 +63,12 @@ export class Node {
     targetPosition = new THREE.Vector2(0, 0);
     zpos;
 
-    constructor({position} = {}) {
+    constructor({position, name} = {}) {
         this.currentPosition.copy(position);
         this.targetPosition.copy(position);
         this.geometry = rectGeometry;
         this.size = properties.size;
+        this.name = name;
 
         this.uniforms = {
             u_texture: { 
@@ -132,14 +134,16 @@ export class Node {
         const leftTop = new THREE.Vector2(-this.size.width / 2 + 1, this.size.height / 2 - properties.ports.topPadding);
         this.inputPortList = new PortList({
             dataType: Port.DataType.Input,
-            position: leftTop
+            position: leftTop,
+            node: this
         });
         this.group.add(this.inputPortList.group);
         
         const rightCenter = new THREE.Vector2(this.size.width / 2 - 1, -properties.ports.bottomPadding);
         this.outputPortList = new PortList({
             dataType: Port.DataType.Output,
-            position: rightCenter
+            position: rightCenter,
+            node: this
         });
         this.group.add(this.outputPortList.group);
     }
