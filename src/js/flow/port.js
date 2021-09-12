@@ -13,10 +13,11 @@ const properties = {
             width: 16,
             height: 16
         },
-    },
-    color: {
-        default: 0x280000,
-        hovered: 0x286000
+        color: {
+            default: 0xffffff,
+            hovered: 0xaaaaaa,
+            clicked: 0x888888,
+        },
     },
     size: {
         width: 60,
@@ -44,6 +45,7 @@ export class Port {
     group;
     portList;
     text;
+    isClicked;
     lines = new Array();
     unattachedLine;
     isDraggable = true;
@@ -82,7 +84,6 @@ export class Port {
     initIcon() {
         this.geometry = rectGeometry;
         this.material = new THREE.MeshBasicMaterial( {
-            // color: properties.color.default,
             map: properties.icon.texture
         } );
 
@@ -172,9 +173,19 @@ export class Port {
         this.update();
     }
 
-    hover(isHovered) {        
-        const newColor = isHovered ? properties.color.hovered : properties.color.default;
-        // this.mesh.material.color.set( newColor );
+    hover(isHovered) {
+    }
+
+    setClicked(isClicked) {
+        const needsUpdate = this.isClicked != isClicked;
+
+        if (needsUpdate) {
+            this.isClicked = isClicked;
+
+            this.material.color.set( isClicked ? 
+                properties.icon.color.clicked :
+                properties.icon.color.default );
+        }
     }
 
     drag(delta) {

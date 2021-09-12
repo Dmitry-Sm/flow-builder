@@ -87,6 +87,14 @@ export class Line {
     mouseDown(isClicked) {
         this.material.color.set(isClicked ? properties.color.clicked :
                 properties.color.default);
+
+        if (this.portStart) {
+            this.portStart.setClicked(isClicked);
+        }
+
+        if (this.portEnd) {
+            this.portEnd.setClicked(isClicked);
+        }
     }
 
     canConnectTo(targetPort) {

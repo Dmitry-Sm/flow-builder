@@ -112,7 +112,12 @@ export class Flow
                 this.clickTarget.mouseDown(true);
             }
             else {
-                target.mouseDown();
+                if (this.clickTarget) {
+                    this.clickTarget.mouseDown(false);
+                    this.clickTarget = null;
+                }
+
+                target.mouseDown();                
             }
                       
         }
