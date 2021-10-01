@@ -46,6 +46,7 @@ const Eps = 1;
 
 export class Node {
     type = ObjectType.Node;
+    flow;
     geometry;
     material;
     mesh;
@@ -77,7 +78,8 @@ export class Node {
         return this.size.height / 2;
     }
 
-    constructor({position, name} = {}) {
+    constructor({flow, position, name} = {}) {
+        this.flow = flow;
         this.currentPosition.copy(position);
         this.targetPosition.copy(position);
         this.geometry = rectGeometry;
@@ -149,6 +151,7 @@ export class Node {
     initPorts() {
         const leftTop = new THREE.Vector2(this.left, this.top - properties.ports.topPadding);
         this.inputPortList = new PortList({
+            flow: this.flow,
             dataType: Port.DataType.Input,
             position: leftTop,
             node: this
@@ -157,6 +160,7 @@ export class Node {
         
         const rightCenter = new THREE.Vector2(this.right, -properties.ports.bottomPadding);
         this.outputPortList = new PortList({
+            flow: this.flow,
             dataType: Port.DataType.Output,
             position: rightCenter,
             node: this

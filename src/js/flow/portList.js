@@ -7,6 +7,7 @@ const portYOffset = 50;
 
 
 export class PortList {
+    flow;
     position;
     group;
     node;
@@ -16,7 +17,8 @@ export class PortList {
 
     dataType;
 
-    constructor({position, dataType, node} = {}) {
+    constructor({flow, position, dataType, node} = {}) {
+        this.flow = flow;
         this.group = new THREE.Group();
         this.dataType = dataType;
         this.node = node;
@@ -43,6 +45,7 @@ export class PortList {
 
     createPort(position) {
         const port = new Port({
+            flow: this.flow,
             position, 
             dataType: this.dataType, 
             portList: this,

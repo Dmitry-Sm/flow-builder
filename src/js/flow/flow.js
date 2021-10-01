@@ -56,7 +56,7 @@ export class Flow
     }
 
     createNode(position) {
-        const node = new Node({position, name: this.getNodeName(this.nodeCounter++)});
+        const node = new Node({flow: this, position, name: this.getNodeName(this.nodeCounter++)});
         this.nodeList.push(node);
         this.nodeMeshMap.set(node.mesh.id, node);
         this.group.add(node.group);
@@ -203,6 +203,10 @@ export class Flow
         if (this.isScaling) {
             this.currentScale -= (this.currentScale - this.targetScale) * 0.1;
             this.scaleGroup.scale.set(this.currentScale, this.currentScale, 1);
+
+            this.nodeList.forEach(node => {
+                node.updatePorts();
+            });
 
             if (Math.abs(this.currentScale - this.targetScale) < Eps) {
                 this.isScaling = false;

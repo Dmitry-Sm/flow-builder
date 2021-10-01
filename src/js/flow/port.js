@@ -6,6 +6,7 @@ import {Line} from './line'
 import {ObjectType} from './enums'
 import portIcon from '../../images/port.png'
 import { PortLabel } from './portLabel';
+import { Flow } from './flow';
 
 const properties = {
     icon: {
@@ -43,6 +44,7 @@ const properties = {
 
 export class Port {
     type = ObjectType.Port;
+    flow;
     geometry;
     material;
     mesh;
@@ -59,25 +61,39 @@ export class Port {
     unattachedLine;
     isDraggable = true;
 
-    _linePointOffset;
-    _lineWorldPoint = new THREE.Vector3();
+    _linePointOffset = new THREE.Vector3(0, 0, 0);
+    _lineWorldPoint = new THREE.Vector3(0, 0, 0);
+    
     get lineWorldPoint() {
-        if (!this._linePointOffset) {
-            const direction = this.dataType === Port.DataType.Input ? -1 : 1;
+        const direction = this.dataType === Port.DataType.Input ? -1 : 1;
 
-            this._linePointOffset = new THREE.Vector3(2 * properties.icon.size.width * direction, 0, 0);
-        }
+            this._linePointOffset.setX(2 
+                * properties.icon.size.width 
+                * direction 
+                * this.flow.currentScale);
 
         this.group.updateMatrixWorld();
         this.group.getWorldPosition(this._lineWorldPoint).add(this._linePointOffset);
 
         return this._lineWorldPoint;
     }
+    
+    get linePoint() {
+        const direction = this.dataType === Port.DataType.Input ? -1 : 1;
+
+            this._linePointOffset.setX(2 
+                * properties.icon.size.width 
+                * direction 
+                * this.flow.currentScale);
+
+        return this._linePointOffset;
+    }
 
     static DataType = {Input: 'Input', Output: 'Output'}
     dataType;
 
-    constructor({position, dataType, portList, name, color} = {}) {
+    constructor({flow, position, dataType, portList, name, color} = {}) {
+        this.flow = flow;
         this.dataType = dataType;
         this.portList = portList;
         this.name = name;

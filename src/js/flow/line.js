@@ -54,6 +54,7 @@ export class Line {
         return null;
     }
 
+    flow;
     geometry;
     material;
     mesh;
@@ -63,13 +64,14 @@ export class Line {
     mousePoint = new THREE.Vector2(0, 0);
     
     constructor(port) {
+        this.flow = port.flow;
         this.group = new THREE.Group();
         this.geometry = new LineGeometry();
         this.geometry.setPositions([0, 0, 0, 0, 0, 0]);
     
         this.material = new LineMaterial({
             color: properties.color.default,
-            linewidth: 0.005, // in pixels
+            linewidth: 0.002, // in pixels
             dashed: false,
         });
 
@@ -170,6 +172,7 @@ export class Line {
     update() {
         this.geometry.setPositions( GetCurvePoints( this.startPoint, this.endPoint ) );
         this.mesh.geometry = this.geometry;
+        this.material.linewidth = 0.002 * this.flow.currentScale;
     }
 }
 
